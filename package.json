@@ -1,0 +1,51 @@
+{
+  "name": "dms-toolbox-offline-electron",
+  "version": "0.2.0",
+  "description": "Offline desktop bundle for The DM's Toolbox (Electron wrapper bundling static site).",
+  "private": true,
+  "main": "src/main.js",
+  "scripts": {
+    "fetch:toolbox": "node scripts/fetch_toolbox.mjs",
+    "start": "electron .",
+    "dist": "npm run fetch:toolbox && electron-builder -w nsis portable --publish never"
+  },
+  "devDependencies": {
+    "electron": "28.3.3",
+    "electron-builder": "24.13.3"
+  },
+  "build": {
+    "appId": "com.yourname.dmstoolbox.offline",
+    "productName": "DMs Toolbox Offline",
+    "files": [
+      "src/**/*",
+      "app/web/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

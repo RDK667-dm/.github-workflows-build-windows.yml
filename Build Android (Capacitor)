@@ -1,0 +1,62 @@
+name: Build Android (Capacitor)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Fetch upstream toolbox (static web files)
+        run: node scripts/fetch_toolbox.mjs
+
+      - name: Install Capacitor dependencies
+        working-directory: mobile-capacitor
+        run: npm ci
+
+      - name: Copy web assets into Capacitor webDir
+        run: node scripts/copy_web_to_capacitor.mjs
+
+      - name: Add Android platform (first run only)
+        working-directory: mobile-capacitor
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+      - name: Sync Capacitor
+        working-directory: mobile-capacitor
+        run: npx cap sync android
+
+      - name: Build Debug APK
+        working-directory: mobile-capacitor/android
+        run: ./gradlew assembleDebug
+
+      - name: Build Release AAB (unsigned)
+        working-directory: mobile-capacitor/android
+        run: ./gradlew bundleRelease
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DMs-Toolbox-Android
+          path: |
+            mobile-capacitor/android/app/build/outputs/apk/debug/*.apk
+            mobile-capacitor/android/app/build/outputs/bundle/release/*.aab
